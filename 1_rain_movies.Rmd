@@ -148,8 +148,6 @@ tm_shape(co) +
 
 ```{r}
 
-
-  
 basemap <- tm_shape(co) + 
     tm_polygons() + 
   tm_shape(co_elev) +
@@ -232,13 +230,11 @@ load('DailyP.RData')
 daily_sf <- daily_p %>%
   st_as_sf(.,coords=c('lon','lat'),crs=4326,remove=F)
 
-
-
-
-full_dates <- unique(daily_sf$date)
+full_dates <- unique(daily_sf$date) %>%
+  slice(1:30)
 
 sequence <- 1:length(full_dates)
-saveVideo({
+saveGIF({
   for(i in sequence){
   sub_sf <- daily_sf %>%
     filter(date == full_dates[i]) %>%
@@ -274,7 +270,65 @@ saveVideo({
 
 # In Class work.
 
-## Make a video of mean temperature differences for the full Colorado dataset
+## GGanimate
+
+Make a video showing the correlation between Air Force Academy and Fort Collins
+between the min, mean, and max temps. The movie should cover the full year. 
+
+Added error bars to the previous graph.
+
+```{r}
+p3 <- ggplot(daily_p,aes(x=date,y=mean_temp,color=station,group=station)) + 
+  geom_line() + 
+  geom_point() +
+  geom_errorbar(
+    aes(ymin = min_temp, ymax = max_temp),
+    #width = 0.5,
+    #size = 1.3,
+    #position = position_dodge(0.9)
+  ) +
+  labs(title = '100 mile temp diff', x='Date',y= 'Mean Temp (f)') + 
+  transition_reveal(date) + 
+  scale_color_few()
+
+
+animate(p3, nframes=nrow(daily_p))
+
+
+```
+
+Actualy try to plot correlation based on color and two sites on axis  
+
+```{r}
+daily_long <- daily_p %>%
+  select(date, station, mean_temp, min_temp, max_temp)%>%
+  gather(.,
+         key = "type",
+         value = "temp")
+daily_wide <- daily_temp_long %>%
+  spread(., 
+         key = "station",
+         value = "temp")
+
+daily_wide_order <- arrange(daily_wide, type)
+
+p4 <- ggplot(daily_wide_order,
+       aes(x=AFF, y=FNL, color = type,group = seq_along(FNL))) +
+  geom_point() +
+  #geom_line()+
+  labs(x = 'Air-Force Temp', y= 'Fort-Collins Temp' )+
+  transition_reveal(date) +
+  theme(legend.title=element_blank())
+  
+gganimate::animate(p4, nframes = 75,
+  width = 700, height = 700, res = 50)
+```
+
+
+
+## (Animation package)
+
+Make a video of mean temperature differences for the full Colorado dataset
 (you need to download this [here](https://www.dropbox.com/s/s7zt18elgoh8q2b/DailyP.RData?dl=0)) first.
 
 The video should look similar to the one above, but I want you to choose your own 
@@ -283,4 +337,3 @@ style (change the background, add other layers (like counties or cities)), etc..
 ```{r}
 load('DailyP.RData')
 ```
-
