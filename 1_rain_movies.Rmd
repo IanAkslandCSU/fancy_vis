@@ -339,31 +339,31 @@ style (change the background, add other layers (like counties or cities)), etc..
 load('DailyP.RData')
 
 
-mean_t_sf_slice <- daily_p %>%
+mean_t_sf_sliced <- daily_p %>%
   slice(1:100) %>%
   st_as_sf(.,coords=c('lon','lat'),crs=4326,remove=F)
 
-full_dates <- unique(daily_sf$date) %>%
+full_dates_sliced <- unique(daily_sf$date) %>%
   slice(1:30)
 
 sequence <- 1:length(full_dates)
 saveGIF({
   for(i in sequence){
-  sub_sf <- daily_sf %>%
-    filter(date == full_dates[i]) %>%
+  sub_sf_two <- mean_t_sf_sliced %>%
+    filter(date == full_dates_sliced[i]) %>%
     filter(daily_p > 0)
   
 
   if(nrow(sub_sf) > 0){
-  finalmap <- basemap + tm_shape(sub_sf) + 
-    tm_dots(title.size='Daily Precip (in)',
-            col='lon',
-            size='daily_p',
+  map <- basemap + tm_shape(sub_sf_two) + 
+    tm_dots(title.size='Mean Temp in Celsius',
+            col='mean_temp',
+            size='mean_temp',
             style='cont',
-            palette='Oranges',
+            palette='Blues',
             legend.show = F,
             size.max=19,
-            scale=3.5,
+            scale=2,
             sizes.legend=c(0,1,5,10,20))
   }else{finalmap <- basemap}
   print(finalmap + 
@@ -372,7 +372,7 @@ saveGIF({
   }
 },movie.name = 'precip_flash_all.mp4',
   interval=0.12,
-  ani.width=1000,
-  ani.height=800)
+  ani.width=700,
+  ani.height=700)
 
 ```
