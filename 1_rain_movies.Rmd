@@ -335,5 +335,44 @@ The video should look similar to the one above, but I want you to choose your ow
 style (change the background, add other layers (like counties or cities)), etc...
 
 ```{r}
+
 load('DailyP.RData')
+
+
+mean_t_sf_slice <- daily_p %>%
+  slice(1:100) %>%
+  st_as_sf(.,coords=c('lon','lat'),crs=4326,remove=F)
+
+full_dates <- unique(daily_sf$date) %>%
+  slice(1:30)
+
+sequence <- 1:length(full_dates)
+saveGIF({
+  for(i in sequence){
+  sub_sf <- daily_sf %>%
+    filter(date == full_dates[i]) %>%
+    filter(daily_p > 0)
+  
+
+  if(nrow(sub_sf) > 0){
+  finalmap <- basemap + tm_shape(sub_sf) + 
+    tm_dots(title.size='Daily Precip (in)',
+            col='lon',
+            size='daily_p',
+            style='cont',
+            palette='Oranges',
+            legend.show = F,
+            size.max=19,
+            scale=3.5,
+            sizes.legend=c(0,1,5,10,20))
+  }else{finalmap <- basemap}
+  print(finalmap + 
+          tm_layout(title=full_dates[i],
+        legend.position=c(0.7,0.2)))
+  }
+},movie.name = 'precip_flash_all.mp4',
+  interval=0.12,
+  ani.width=1000,
+  ani.height=800)
+
 ```
